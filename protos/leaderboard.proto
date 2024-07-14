@@ -2,11 +2,12 @@ syntax = "proto3";
 
 package leaderboard;
 
-option go_package = "github.com/williamfedele/leaderboard/protos";
+option go_package = ".";
 
 service LeaderboardService {
     rpc AddScore (AddScoreRequest) returns (AddScoreResponse) {}
     rpc GetTopScores (GetTopScoresRequest) returns (GetTopScoresResponse) {}
+    rpc GetScoresAroundPlayer (GetScoresAroundPlayerRequest) returns (GetScoresAroundPlayerResponse) {}
 }
 
 message PlayerScore {
@@ -23,9 +24,18 @@ message AddScoreResponse {
 }
 
 message GetTopScoresRequest {
-    int32 limit = 1;
+    int64 limit = 1;
 }
 
 message GetTopScoresResponse {
+    repeated PlayerScore scores = 1;
+}
+
+message GetScoresAroundPlayerRequest {
+    string player_id = 1;
+    int64 radius = 2;
+}
+
+message GetScoresAroundPlayerResponse {
     repeated PlayerScore scores = 1;
 }

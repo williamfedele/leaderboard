@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	pb "github.com/williamfedele/leaderboard/protos"
+	pb "github.com/williamfedele/leaderboard/protogen"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
@@ -28,7 +28,7 @@ func (s *server) AddScore(ctx context.Context, req *pb.AddScoreRequest) (*pb.Add
 }
 
 func (s *server) GetTopScores(ctx context.Context, req *pb.GetTopScoresRequest) (*pb.GetTopScoresResponse, error) {
-	entries, err := s.redisClient.ZRevRangeWithScores(ctx, "leaderboard", 0, int64(req.Limit-1)).Result()
+	entries, err := s.redisClient.ZRevRangeWithScores(ctx, "leaderboard", 0, req.Limit-1).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +42,27 @@ func (s *server) GetTopScores(ctx context.Context, req *pb.GetTopScoresRequest) 
 	return &pb.GetTopScoresResponse{Scores: topScores}, nil
 }
 
+func (s *server) GetScoresAroundPlayer(ctx context.Context, req *pb.GetScoresAroundPlayerRequest) (*pb.GetScoresAroundPlayerResponse, error) {
+
+	rank, err := s.redisClient.ZRevRank(ctx, "leaderboard", req.PlayerId).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	entries, err := s.redisClient.ZRevRangeWithScores(ctx, "leaderboard", rank-req.Radius, rank+req.Radius).Result()
+	if err != nil {
+		return nil, err
+	}
+	var scores []*pb.PlayerScore
+	for _, entry := range entries {
+		scores = append(scores, &pb.PlayerScore{
+			PlayerId: entry.Member.(string),
+			Score:    int64(entry.Score),
+		})
+	}
+	return &pb.GetScoresAroundPlayerResponse{Scores: scores}, nil
+}
+
 func main() {
 	listen, err := net.Listen("tcp", ":8080")
 	if err != nil {
@@ -50,6 +71,7 @@ func main() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
+	defer redisClient.Close()
 
 	s := grpc.NewServer()
 	pb.RegisterLeaderboardServiceServer(s, &server{redisClient: redisClient})
