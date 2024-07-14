@@ -6,9 +6,9 @@ PROTO_FILES := $(wildcard $(PROTO_DIR)/*.proto)
 SERVER_FILE := ./server/main.go
 CLIENT_FILE := ./client/main.go
 
-all: compile run
+run: compile_proto run_server
 
-compile: $(PROTO_FILES)
+compile_proto: $(PROTO_FILES)
 	@mkdir -p $(OUT_DIR)
 	@for proto_file in $(PROTO_FILES); do \
 		protoc --go_out=$(OUT_DIR) --go-grpc_out=$(OUT_DIR) $$proto_file; \
@@ -23,6 +23,6 @@ run_client:
 
 clean:
 	@rm -rf $(OUT_DIR)
-	@echo "Cleaned up protobuf files."
+	@echo "Cleaned up generated files."
 
-.PHONY: all compile run clean
+.PHONY: run compile_proto run_server run_client clean

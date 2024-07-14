@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.NewClient("localhost:8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(":8080", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("failed to dial server: %v", err)
 	}
@@ -53,7 +53,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to get scores around player: %v", err)
 	}
-	log.Println("Scores around Player3:")
+	log.Println("Scores around Player7:")
 	for i, score := range r.Scores {
 		log.Printf("%d. Player: %s, Score: %d\n", i+1, score.PlayerId, score.Score)
 	}
